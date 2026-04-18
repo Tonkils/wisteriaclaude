@@ -59,11 +59,69 @@ author: claude
 
 ---
 
-## Universal Principles for Both Topics
+## What Makes GOOD Cannabis Content (Deep Dive)
 
-- Lead with **education + authenticity** — builds trust, protects accounts
+### Hooks That Work
+- Challenge a common belief — "You've been rolling wrong your whole life"
+- Tap into frustration — "Why does nobody talk about this strain?"
+- Myth-busting — stops scrolls and drives saves
+- Show the result first, then explain
+
+### Content That Performs
+- "Day in my life" with cannabis woven in naturally — not forced
+- Dosing guides and "how it actually works" explainers
+- Raw, unpolished reviews — cinematic intros kill retention
+- Behind-the-scenes of grows, dispensaries, cultivation
+- Niche specialization: medical, athletic recovery, anxiety relief outperform general
+
+### The #1 Mistake
+Most cannabis brands still post like it's 2018 — over-produced, sales-y, no personality. Raw authenticity + strong hook wins every time.
+
+### Moderation Safety by Platform
+- **X (Twitter)** — most lenient, allows paid ads, product links, direct e-commerce
+- **Instagram** — visual content OK (products, plants, consumption) but NO selling language
+- **TikTok** — strictest; text + voiceover safer than footage
+
+---
+
+## What Makes GOOD Mushroom/Fungi Content (Deep Dive)
+
+### Hottest Sub-Niches Right Now
+- **Functional/medicinal mushrooms** — Lion's Mane has 189M TikTok videos
+- **Home cultivation** — "grow your own" tutorials dominate YouTube
+- **Foraging & wild identification** — deeply loyal audience, very shareable
+- **Psychedelic harm reduction + integration** — growing fast with mental health framing
+
+### Top Creators to Study
+- **@chaoticforager** — 1.1M TikTok, foraging + mycology
+- **Spore Daddy** — cultivation education, "grow off" challenge format (viral mechanic)
+- **Dope As Yola** — 2M YouTube, strain reviews + culture (cannabis crossover)
+- **The Cannabinista (Anna Li)** — 500K cross-platform, lifestyle + education blend
+- **Red Headed Yeti** — trip tips, drug chemistry, harm reduction
+
+### What Makes Top Creators Different
+- Picked a specific angle and went deep — not broad
+- Consistent posting rhythm signals trust to algorithm
+- Participate in trends/challenges rather than just posting
+- Community interaction IS part of the content
+
+---
+
+## Universal Framework for Both Niches
+
+| Element | What Works |
+|---|---|
+| Hook | Challenge a belief, ask a question, show result first |
+| Format | Raw > polished on short form |
+| Angle | Education + personal experience > promotion |
+| Platform | YouTube = depth, TikTok/IG = discovery |
+| Consistency | 3-7x/week minimum |
+| Safety | Wellness/education framing protects accounts |
+
+## Universal Principles
+- Lead with education + authenticity — builds trust, protects accounts
 - Avoid direct sales language on all platforms
 - YouTube = main content hub (most lenient)
 - Instagram/TikTok = discovery funnels with safe framing
 - Community trust first, monetization second
-- Corrections and behavior changes are highest priority memories
+- Niche down — general content underperforms specialized content every time
