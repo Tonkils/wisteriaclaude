@@ -14,6 +14,7 @@ Shared memory store for Jaret and Hiya's Claude Code sessions. This index grows 
 
 ## Feedback — Hiya
 - [Check Instructions First](memory/feedback/hiya/check_instructions_first.md) — Always read CLAUDE.md before saving memories or taking structured actions
+- [Always Push After Memory](memory/feedback/hiya/always_push_after_memory.md) — Push to GitHub immediately after every memory commit
 
 ## Feedback — Shared
 - [Full conversation capture](memory/feedback/shared/full_capture.md) — Record everything from sessions, not just highlights
