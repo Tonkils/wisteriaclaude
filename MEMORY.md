@@ -7,7 +7,7 @@ Shared memory store for Jaret and Hiya's Claude Code sessions. This index grows 
 - [Hiya](memory/users/hiya.md) — Co-owner, created the repo, strainscoutmd
 
 ## Projects
-<!-- Add project memories here as work progresses -->
+- [Wisteria Farms](memory/projects/wisteria_farms.md) — Hiya's cannabis/mushroom company; all content/marketing research is in service of this brand
 
 ## Feedback — Jaret
 <!-- Jaret-specific interaction preferences go here -->
