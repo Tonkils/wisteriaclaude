@@ -27,6 +27,34 @@ Every session gets a log entry appended to `sessions/log.md`. Format:
 
 Create the log entry at the **end** of the session (or when committing work), not at the start. If the session is short or trivial (e.g., just a quick question), skip the log entry.
 
+## Conversation Transcripts
+
+**Claude MUST capture the full content of every session** — not just highlights. At the end of each session (or when committing), write a transcript to `sessions/transcripts/YYYY-MM-DD-[user]-[topic].md`.
+
+Transcript format:
+```markdown
+---
+date: YYYY-MM-DD
+session_user: jaret | hiya
+topic: Brief topic description
+---
+
+## Conversation
+
+[Full record of the conversation — what the user said, what Claude did, decisions made, code written, questions asked. Include enough detail that someone reading this later can reconstruct exactly what happened in the session.]
+```
+
+This is the **complete record**. Do not summarize or skip parts. If something was discussed, it goes in the transcript.
+
+### Mistakes and Corrections
+
+**Any time the user corrects Claude, says something was wrong, or asks for a change in behavior, this MUST be:**
+1. Recorded prominently in the transcript with a `**CORRECTION:**` prefix
+2. Saved as a feedback memory in the appropriate user's `memory/feedback/[user]/` directory
+3. Noted in the session log
+
+These corrections are the highest-priority memories. They should never be lost or buried.
+
 ## How Shared Memory Works
 
 All memory lives in the `memory/` directory of this repo, organized by type:
@@ -49,8 +77,9 @@ All memory lives in the `memory/` directory of this repo, organized by type:
 6. **Before acting on a memory**, verify it's still accurate. Memories can go stale.
 7. **Respect per-user feedback.** If Jaret has a preference that differs from Hiya's, follow the current session user's preferences. Shared feedback applies to both.
 8. **Never store secrets, tokens, or credentials** in memory files.
-9. **Keep MEMORY.md under 200 lines.** Each entry is one line: `- [Title](memory/type/file.md) — one-line description`
-10. **When reviewing history**, use git log and blame to see who did what. Session logs in `sessions/log.md` provide human-readable context.
+9. **MEMORY.md grows with the team.** There is no line limit. Each entry is one line: `- [Title](memory/type/file.md) — one-line description`. As the index grows, keep it well-organized by section so it remains scannable.
+10. **When reviewing history**, use git log and blame to see who did what. Session logs in `sessions/log.md` provide human-readable context. Full transcripts in `sessions/transcripts/` have the complete record.
+11. **Record everything.** Don't filter for "importance" — capture the full conversation. What seems trivial now may matter later. Corrections and behavior changes are highest priority, but everything gets recorded.
 
 ## Memory File Format
 
