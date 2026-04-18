@@ -9,6 +9,7 @@ Shared memory store for Jaret and Hiya's Claude Code sessions. This index grows 
 ## Projects
 - [Wisteria Farms](memory/projects/wisteria_farms.md) — Hiya's cannabis/mushroom company; all content/marketing research is in service of this brand
 - [Video Editing Knowledge Base](memory/projects/video-editing-knowledge.md) — Shared reference library for expert editing guidance across podcast, short-form, and YouTube
+- [Video Editing Orchestrator](memory/projects/video-editing-orchestrator.md) — Agent system with slash commands, dual-path routing, editorial heuristics, feedback loop
 
 ## Feedback — Jaret
 <!-- Jaret-specific interaction preferences go here -->
@@ -20,6 +21,7 @@ Shared memory store for Jaret and Hiya's Claude Code sessions. This index grows 
 ## Feedback — Shared
 - [Full conversation capture](memory/feedback/shared/full_capture.md) — Record everything from sessions, not just highlights
 - [Corrections are priority](memory/feedback/shared/corrections_priority.md) — Mistakes and behavior changes get special emphasis
+- [Save plans before executing](memory/feedback/shared/save_plans_before_executing.md) — Commit and push plans to shared memory before starting multi-step work
 
 ## References — Video Editing
 - [Video Editing Best Practices](memory/references/video_editing.md) — Viral short/long form editing, transitions by platform (TikTok/Reels/YouTube), podcast clip strategy
