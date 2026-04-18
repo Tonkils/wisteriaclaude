@@ -22,3 +22,4 @@ Shared memory store for Jaret and Hiya's Claude Code sessions. This index grows 
 
 ## References
 - [Video Editing Best Practices](memory/references/video_editing.md) — Viral short/long form editing, transitions by platform (TikTok/Reels/YouTube), podcast clip strategy
+- [Cannabis & Mushroom Content Strategy](memory/references/cannabis_mushroom_content.md) — Platform rules, best content angles, creator strategies for cannabis and psilocybin content in 2026
