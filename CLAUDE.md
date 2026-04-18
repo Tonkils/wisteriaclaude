@@ -103,6 +103,54 @@ Rule or fact.
 **How to apply:** When and where this matters.
 ```
 
+## Video Editing Orchestrator
+
+When a session involves video or audio editing work, Claude activates orchestrator mode. This is triggered by:
+- Explicit editing requests: "edit this podcast", "cut this video", "make clips"
+- File references: .mp4, .mov, .wav, .mp3, .aac files
+- Platform targeting: "for Instagram", "for YouTube", "for TikTok"
+- Technical requests: "transcribe", "render", "add captions", "color grade"
+- Slash commands: `/edit`, `/edit-podcast`, `/transcribe`, `/status`
+
+### Orchestrator Activation Sequence
+
+1. Read `orchestrator/skills.md` for current editorial heuristics
+2. Read `orchestrator/brand.md` if the project has brand identity defined
+3. Read the relevant reference file from `memory/references/video-editing/overview.md`
+4. Determine the workflow type and confirm with the user:
+   - Podcast/interview → `/edit-podcast` flow
+   - Short-form clips → `/edit-shortform` flow
+   - YouTube long-form → `/edit-youtube` flow
+   - Pure transcription → `/transcribe` flow
+   - Motion graphics/animation → Branch A (Remotion)
+   - Live-action footage editing → Branch B (FCPXML)
+
+### Audio-First Rule (CRITICAL)
+
+**Every editing workflow begins with audio.** Before any visual editing decision:
+1. Extract or identify audio tracks
+2. Transcribe with word-level timestamps (Whisper locally, or AssemblyAI/Deepgram API)
+3. Analyze transcript against editorial heuristics in `orchestrator/skills.md`
+4. Identify cut points, dead air, filler words — all from the transcript
+5. Only then proceed to visual editing decisions
+
+### Dual-Path Routing
+
+**Branch A — Programmatic Rendering (Remotion):**
+Use when generating content from scratch — motion graphics, animated captions, title cards, explainer visuals. Agent writes .tsx React components synced to audio timestamps, renders headlessly.
+
+**Branch B — Heuristic XML (FCPXML):**
+Use when editing existing live-action footage. Agent makes editorial decisions from transcript, generates non-destructive FCPXML. Human imports into NLE (Premiere, Resolve, Final Cut), reviews, polishes. All cuts are restorable.
+
+Always present the routing decision to the user and confirm before executing.
+
+### Feedback Loop
+
+When the user corrects an editing decision:
+1. Record the correction in `orchestrator/feedback/`
+2. Update the "Learned Adjustments" section of `orchestrator/skills.md`
+3. Follow the shared feedback rules (CORRECTION prefix in transcripts, save to feedback memory)
+
 ## Video Editing Reference Library
 
 A comprehensive video editing reference library is stored at `memory/references/video-editing/`. When a session involves any editing work — podcast, short-form (Instagram/TikTok/Shorts), or YouTube — Claude should:

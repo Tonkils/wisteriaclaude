@@ -72,16 +72,16 @@ wisteriaclaude/
 ### Phase 1: Foundation + Orchestrator ← CURRENT
 1. [x] Create `.claude/commands/` directory
 2. [x] Create `orchestrator/` directory structure
-3. [ ] Create `.claude/settings.json` with permissions
-4. [ ] Add orchestrator section to `CLAUDE.md`
-5. [ ] Write `.claude/commands/edit.md`
-6. [ ] Write `.claude/commands/status.md`
-7. [ ] Write `.claude/commands/transcribe.md`
-8. [ ] Write `.claude/commands/edit-podcast.md`
-9. [ ] Write `orchestrator/workflows/podcast.md`
-10. [ ] Write `orchestrator/skills.md`
-11. [ ] Write `orchestrator/brand.md`
-12. [ ] Update `MEMORY.md` with orchestrator entries
+3. [x] Create `.claude/settings.json` with permissions
+4. [x] Add orchestrator section to `CLAUDE.md`
+5. [x] Write `.claude/commands/edit.md`
+6. [x] Write `.claude/commands/status.md`
+7. [x] Write `.claude/commands/transcribe.md`
+8. [x] Write `.claude/commands/edit-podcast.md`
+9. [x] Write `orchestrator/workflows/podcast.md`
+10. [x] Write `orchestrator/skills.md`
+11. [x] Write `orchestrator/brand.md`
+12. [x] Update `MEMORY.md` with orchestrator entries
 13. [ ] Commit and push
 
 ### Phase 2: Short-Form + YouTube + FCPXML
