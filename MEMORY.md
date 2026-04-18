@@ -13,11 +13,11 @@ Shared memory store for Jaret and Hiya's Claude Code sessions. This index grows 
 <!-- Jaret-specific interaction preferences go here -->
 
 ## Feedback — Hiya
-<!-- Hiya-specific interaction preferences go here -->
+- [Check Instructions First](memory/feedback/hiya/check_instructions_first.md) — Always read CLAUDE.md before saving memories or taking structured actions
 
 ## Feedback — Shared
 - [Full conversation capture](memory/feedback/shared/full_capture.md) — Record everything from sessions, not just highlights
 - [Corrections are priority](memory/feedback/shared/corrections_priority.md) — Mistakes and behavior changes get special emphasis
 
 ## References
-<!-- Add reference memories here for external resources -->
+- [Video Editing Best Practices](memory/references/video_editing.md) — Viral short/long form editing, transitions by platform (TikTok/Reels/YouTube), podcast clip strategy
