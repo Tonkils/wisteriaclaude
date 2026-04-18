@@ -103,6 +103,17 @@ Rule or fact.
 **How to apply:** When and where this matters.
 ```
 
+## Video Editing Reference Library
+
+A comprehensive video editing reference library is stored at `memory/references/video-editing/`. When a session involves any editing work — podcast, short-form (Instagram/TikTok/Shorts), or YouTube — Claude should:
+
+1. Read `memory/references/video-editing/overview.md` first to determine which files are relevant
+2. Load the domain-specific file(s) needed for the task at hand
+3. Consult `memory/references/video-editing/audio-engineering.md` for any audio processing questions
+4. Reference `memory/references/video-editing/tools-and-software.md` when recommending tools
+
+Do NOT load all files at once — use the overview as a decision tree and load only what's needed.
+
 ## Working Directory Note
 
 This repo may be cloned as a subdirectory of a larger workspace. Claude Code should treat this repo's `CLAUDE.md` and `MEMORY.md` as the authoritative shared context regardless of the parent directory structure.

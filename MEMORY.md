@@ -8,6 +8,7 @@ Shared memory store for Jaret and Hiya's Claude Code sessions. This index grows 
 
 ## Projects
 - [Wisteria Farms](memory/projects/wisteria_farms.md) — Hiya's cannabis/mushroom company; all content/marketing research is in service of this brand
+- [Video Editing Knowledge Base](memory/projects/video-editing-knowledge.md) — Shared reference library for expert editing guidance across podcast, short-form, and YouTube
 
 ## Feedback — Jaret
 <!-- Jaret-specific interaction preferences go here -->
@@ -20,6 +21,16 @@ Shared memory store for Jaret and Hiya's Claude Code sessions. This index grows 
 - [Full conversation capture](memory/feedback/shared/full_capture.md) — Record everything from sessions, not just highlights
 - [Corrections are priority](memory/feedback/shared/corrections_priority.md) — Mistakes and behavior changes get special emphasis
 
-## References
+## References — Video Editing
 - [Video Editing Best Practices](memory/references/video_editing.md) — Viral short/long form editing, transitions by platform (TikTok/Reels/YouTube), podcast clip strategy
+- [Overview](memory/references/video-editing/overview.md) — Entry point and decision tree for all editing knowledge
+- [Podcast Editing](memory/references/video-editing/podcast-editing.md) — Workflow, audio specs, multi-cam, clip creation
+- [Short-Form Editing](memory/references/video-editing/shortform-editing.md) — Instagram Reels, TikTok, Shorts techniques and specs
+- [YouTube Editing](memory/references/video-editing/youtube-editing.md) — Retention, cinematic, explainer styles and workflow
+- [Tools and Software](memory/references/video-editing/tools-and-software.md) — NLEs, audio tools, AI tools, motion graphics, pricing
+- [Audio Engineering](memory/references/video-editing/audio-engineering.md) — Signal chain, EQ, compression, loudness standards
+- [Tutorials and Courses](memory/references/video-editing/tutorials-and-courses.md) — Curated learning resources and recommended paths
+- [Creators and Benchmarks](memory/references/video-editing/creators-and-benchmarks.md) — Gold standard creators and what to study from each
+
+## References — General
 - [Cannabis & Mushroom Content Strategy](memory/references/cannabis_mushroom_content.md) — Platform rules, best content angles, creator strategies for cannabis and psilocybin content in 2026
