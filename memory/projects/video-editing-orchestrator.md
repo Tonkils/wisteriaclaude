@@ -91,9 +91,10 @@ wisteriaclaude/
 4. [x] Write `orchestrator/workflows/youtube.md`
 5. [ ] Commit and push
 
-### Phase 3: Remotion + Motion Graphics
-- Install Remotion, write render.md command
-- Test animated caption generation and headless rendering
+### Phase 3: Remotion + Motion Graphics ✅ COMMAND WRITTEN
+- [x] Write `.claude/commands/render.md` (Branch A pipeline, Remotion patterns, common recipes)
+- [ ] Install Remotion locally (`npm init remotion@latest`) — requires user action
+- [ ] Test animated caption generation and headless rendering — requires Remotion installed
 
 ### Phase 4: Cloud + API Integration
 - Shotstack MCP server for cloud rendering
