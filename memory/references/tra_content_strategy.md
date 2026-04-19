@@ -137,3 +137,57 @@ From one 37-min episode: extract
 - 3-5 TikToks (reframed with safe language)
 - Thumbnail: guest face + provocative question
 - Clip titles: name after the exact insight, never generic
+
+---
+
+## Jay Shetty Style — TRA Reference
+
+Hiya wants TRA to feel like Jay Shetty's podcast. Study this to match the energy.
+
+### Jay Shetty's Core Mission
+"Make wisdom go viral." Everything is built around making deep ideas feel accessible, warm, and emotionally resonant.
+
+### Visual & Production Aesthetic
+- Soft warm lighting — never harsh or studio-bright
+- Intentionally propped background: books, plants, art objects that feel curated but lived-in
+- Earthy, desaturated color grade — calm, not punchy
+- Clean talking-head format — no visual distractions; credibility comes from the conversation
+- Both host and guest are always equally framed and lit
+
+### Storytelling Structure (the core formula)
+1. **Universal pain** — open with a feeling or struggle everyone recognizes
+2. **Guest intro** — who this person is and why they're qualified to speak on it
+3. **Transformation journey** — the guest's story, with emotional depth, not just facts
+4. **Earned wisdom** — the insight that came *from* the journey, not before it
+5. **Actionable takeaway** — what the listener can do or feel differently right now
+
+### Host Behavior — "Witness, Don't Lecture"
+Jay does not explain — he witnesses. He draws the breakthrough out of the guest in real time. He:
+- Asks questions that give guests permission to go deeper
+- Mirrors emotions — leans in, pauses, lets silence breathe
+- Never rushes past a vulnerable moment
+- Names what just happened: "That's the thing — you just said something really important"
+
+This is the style Nina should aim for. Not an interviewer — a witness.
+
+### Short-Form Formula
+- Every clip is self-contained — starts with a hook, ends with the punchline/takeaway
+- Named after the exact insight: "Why your nervous system mistakes safety for danger" not "Episode 4 clip"
+- Captions reinforce key words — same warm font, same earthy palette
+- No branded intro in clips — starts instantly
+
+### TRA Opportunity: The Jay Shetty of Psychedelic Healing
+Jay Shetty dominates the mainstream wisdom/spirituality lane. He does NOT touch psychedelics. That lane is unclaimed at his level of warmth and production quality.
+
+TRA can be the psychedelic healing version of On Purpose — same emotional intelligence, same depth, same accessibility — but in a space with almost no direct competition at that production quality.
+
+What to copy:
+- The warmth and witness energy of the host
+- The transformation arc structure per episode
+- The earthy, clean visual aesthetic
+- Clip naming strategy (insight-first titles)
+
+What to add that Jay doesn't have:
+- Science-first framing (flag protection + credibility)
+- Psilocybin-specific vocabulary handled carefully (neuroplasticity, ego dissolution, set and setting)
+- Guest stories that are even more dramatic than Jay's — the stakes in psychedelic healing are life-or-death
