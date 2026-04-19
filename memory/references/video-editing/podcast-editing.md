@@ -25,6 +25,12 @@ author: claude
 - Create a hook: pull a compelling sound bite from later in the conversation
 - Impose structure: setup → exploration → payoff
 - Use three-act structure when the content supports it
+- **Jay Shetty transformation arc (preferred for interview/healing content):**
+  1. Universal pain — open with a feeling everyone recognizes
+  2. Guest intro — who they are and why they speak to this
+  3. Transformation journey — the story, emotionally not just factually
+  4. Earned wisdom — the insight that came *from* the journey
+  5. Actionable takeaway — what the listener can do or feel differently right now
 
 ### 4. Tighten Pacing
 - Remove filler words: "um," "uh," "you know," "like," "so," "right"
@@ -74,6 +80,8 @@ Apply in this order:
 - **Reframing**: Center the active speaker. AI auto-layouts can handle this (Riverside, OpusClip).
 - **CTA**: End card with subscribe/follow prompt
 - **Selection criteria**: Emotional peaks, surprising insights, controversial takes, actionable advice
+- **Naming**: Always name after the exact insight delivered, never a generic label. "What 30 years of therapy couldn't fix in 8 hours" beats "Clip 3."
+- **Self-contained**: Every clip must start with its own hook and end with its own payoff — no clip should require context from the episode to land
 
 ## Loudness Targets by Platform
 
@@ -106,3 +114,27 @@ Apply in this order:
 | Colin & Samir | Polished video podcast, strong clip creation pipeline |
 | Huberman Lab | Educational structure, graphics for explanation, chapter markers |
 | Diary of a CEO | Professional multi-cam studio, consistent branding |
+| **Jay Shetty — On Purpose** | **The gold standard for warmth + wisdom interview content. Transformation arc structure, witness host style, earthy visual aesthetic, insight-first clip naming. Study this for ALL interview and healing content.** |
+
+## Jay Shetty Editing Style — Apply to All Interview/Healing Content
+
+This is Hiya's benchmark for how Wisteria Farms content should feel at the high end. Apply to TRA, Car Collective interviews, any talking-head content.
+
+**Visual production:**
+- Soft warm lighting — never harsh or bright studio light
+- Clean talking-head; no visual distractions in the background
+- Earthy, desaturated color grade — calm, not punchy
+- Both speakers equally framed and lit
+- Intentional, propped background — curated but lived-in
+
+**Host/interview editing behavior — protect these moments:**
+- Never cut a pause where a guest is processing emotion
+- Never cut the moment right before a breakthrough — silence is the setup
+- If the host asks a question and the guest pauses, keep the pause
+- Let reactions breathe — host leaning in, nodding, tearing up — these ARE the content
+
+**Clip creation from Jay Shetty style content:**
+- Every clip is self-contained: starts with its own hook, ends with its own payoff
+- Name after the exact insight: never "Episode 12 clip" — always "What no one tells you about grief"
+- Warm earthy caption font, no jarring animations — let the words land
+- No branded intro on clips — starts instantly

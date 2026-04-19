@@ -48,6 +48,36 @@ The dominant YouTube editing paradigm. Designed to maximize Average View Duratio
 
 **Note:** MrBeast himself has acknowledged wanting to move past the "ultra fast-paced/overstim era" — the style is maturing. Best editors know when to use retention techniques and when to let content breathe.
 
+### Warmth + Wisdom Style (Jay Shetty / On Purpose)
+
+The benchmark for interview and transformation-based content. Use for TRA, any personal development/healing show, and long-form interview content where trust and depth matter more than stimulation.
+
+**Core philosophy:** The edit serves the emotional journey. Every cut either advances the transformation arc or comes out.
+
+**Transformation arc structure:**
+1. Universal pain (the hook — a feeling the audience already has)
+2. Guest intro and context (why this person, why now)
+3. The journey (story with emotional honesty, not just information)
+4. Earned wisdom (insight that came *from* the experience)
+5. Actionable takeaway (what the viewer can do or feel differently)
+
+**Visual production:**
+- Soft warm lighting, earthy/desaturated color grade
+- Clean talking-head — credibility lives in the conversation, not decoration
+- Both speakers equally lit and framed
+- No distracting visual elements; background is intentional but minimal
+
+**Editorial decisions — protect these:**
+- Never cut a meaningful pause or moment of emotional processing
+- Let silence breathe before breakthroughs — the pause IS the setup
+- Reaction shots of the host are content: leaning in, nodding, tearing up
+- Never put music under emotional peaks — let the voice carry it
+
+**Chapters and structure:**
+- Name chapters after their insight: "When she realized the grief never left" not "Chapter 3"
+- Timestamp at every tonal shift — audiences self-navigate based on what they need
+- Science-first framing at the top of every episode (builds credibility, reduces flagging risk for sensitive topics)
+
 ### Cinematic Style (MKBHD / Casey Neistat)
 
 **Color grading:**
@@ -183,6 +213,7 @@ A modern YouTube editor is effectively a one-person post-production house:
 
 | Channel | Style | What to Learn |
 |---------|-------|---------------|
+| **Jay Shetty — On Purpose** | **Warmth + Wisdom** | **Transformation arc structure, witness host style, earthy aesthetic, insight-first naming. Benchmark for all interview/healing content.** |
 | MrBeast | Retention | Pacing as science, hook construction, pattern interrupts |
 | MKBHD | Cinematic | Clean production, color grading, letting visuals breathe |
 | Casey Neistat | Vlog | Raw energy, music-driven editing, first-person storytelling |
