@@ -38,3 +38,7 @@ This directory contains a comprehensive video editing reference library covering
 4. **Cut for the audience, not the creator.** Remove ego, keep engagement. If a segment is self-indulgent but boring, cut it.
 5. **Specs are not negotiable.** Loudness targets, aspect ratios, and format requirements exist for a reason. Hit them exactly.
 6. **Watch on the delivery device.** Always preview edits on the device/platform where the audience will consume them — phone for Reels, laptop for YouTube, headphones for podcasts.
+7. **Witness, don't lecture.** The best hosts draw breakthroughs out of guests in real time rather than explaining at the audience. Silence, pauses, and emotional space are editorial tools — protect them. Never cut a genuine vulnerable moment for pacing.
+8. **Name content after the insight, not the episode.** Clips, chapters, and titles should reflect the exact insight delivered ("Why your nervous system mistakes safety for danger") not generic labels ("Episode 4 clip"). This applies to all platforms and all clients.
+9. **Transformation arc structure.** Every piece of content — a clip, an episode, a Reel — should follow: universal pain → context → journey → earned insight → actionable takeaway. Audiences stay for the transformation, not the topic.
+10. **Warmth is a production value.** Soft lighting, earthy tones, clean framing, and emotional presence communicate trustworthiness. For interview and podcast content especially: calm, warm, and intentional beats loud, high-energy, and overstimulating every time.

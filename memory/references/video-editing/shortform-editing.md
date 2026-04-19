@@ -133,6 +133,16 @@ Keep all critical text and visuals in the middle 66% of the frame.
 - Direct reply format drives engagement
 - Quick, authentic, conversational
 
+### Warmth + Wisdom (Jay Shetty / On Purpose Style)
+Use for: TRA podcast clips, interview content, healing/personal development content, any brand where trust matters more than hype.
+- **Hook**: Universal pain or a surprising insight — never a loud visual. Open mid-sentence if the first line is strong enough.
+- **No jump cuts with sound design**: Clean silent cuts only — no whooshes, no bass hits. Silence is intentional.
+- **Earthy caption font**: Warm tones, not neon. Bold but not aggressive. Key words can be larger — not flashing.
+- **Protect emotional space**: If a guest pauses before saying something important, keep the pause. It's part of the clip.
+- **Self-contained arc**: Hook → journey or context → payoff. Every clip delivers a complete thought.
+- **Naming**: Title = the exact insight. "Why you can't stop attracting the wrong people" not "Episode 7 clip."
+- **No branded intro on clips**: Start instantly. The first second IS the brand.
+
 ## 2025-2026 Trends
 
 - Quality over quantity shift (66% of users more selective)

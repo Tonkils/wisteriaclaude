@@ -7,7 +7,7 @@ Shared memory store for Jaret and Hiya's Claude Code sessions. This index grows 
 - [Hiya](memory/users/hiya.md) — Co-owner, created the repo, strainscoutmd
 
 ## Projects
-- [Wisteria Farms](memory/projects/wisteria_farms.md) — Hiya's cannabis/mushroom company; all content/marketing research is in service of this brand
+- [Wisteria Farms](memory/projects/wisteria_farms.md) — Marketing agency (Jaret + Hiya). Clients: BLVCK MRKT (cannabis MD), TRA podcast (psilocybin/Nina Boyd), Car Collective (SA influencers), TheMatchaDragon (creator outreach)
 - [Video Editing Knowledge Base](memory/projects/video-editing-knowledge.md) — Shared reference library for expert editing guidance across podcast, short-form, and YouTube
 - [Video Editing Orchestrator](memory/projects/video-editing-orchestrator.md) — Agent system with slash commands, dual-path routing, editorial heuristics, feedback loop
 
@@ -36,3 +36,4 @@ Shared memory store for Jaret and Hiya's Claude Code sessions. This index grows 
 
 ## References — General
 - [Cannabis & Mushroom Content Strategy](memory/references/cannabis_mushroom_content.md) — Platform rules, best content angles, creator strategies for cannabis and psilocybin content in 2026
+- [TRA Content Strategy](memory/references/tra_content_strategy.md) — Deep research for Trauma Relief Alliance podcast — audience, hooks, platform strategy, competitor shows, editing techniques
