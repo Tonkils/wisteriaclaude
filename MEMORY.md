@@ -36,3 +36,4 @@ Shared memory store for Jaret and Hiya's Claude Code sessions. This index grows 
 
 ## References — General
 - [Cannabis & Mushroom Content Strategy](memory/references/cannabis_mushroom_content.md) — Platform rules, best content angles, creator strategies for cannabis and psilocybin content in 2026
+- [TRA Content Strategy](memory/references/tra_content_strategy.md) — Deep research for Trauma Relief Alliance podcast — audience, hooks, platform strategy, competitor shows, editing techniques
