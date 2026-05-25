@@ -1,0 +1,6 @@
+networkx>=3.2
+pyvis>=0.3.2
+gspread>=6.0.0
+google-auth>=2.0.0
+google-auth-oauthlib>=1.0.0
+python-louvain>=0.16
