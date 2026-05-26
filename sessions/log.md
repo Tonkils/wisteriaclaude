@@ -27,6 +27,18 @@ Chronological record of all Claude Code sessions. Each entry records who was pre
 - Jaret's key direction: this is shared memory (not per-user), pure reference material, agent workflow is a separate initiative
 - Pushed to GitHub
 
+### 2026-05-26 — hiya
+- Built Instagram cannabis account scraper Chrome extension (MV3) from scratch
+- Pre-loaded queue of ~350 cannabis Instagram accounts from Hiya's target list
+- Extension autonomously visits profiles, intercepts Instagram API responses via fetch/XHR monkey-patch, extracts followers, engagement rate, bio, email, location (including bio-inferred state), verified status
+- Google Sheets sync to the Wisteria spreadsheet — creates Accounts, Edges, and Discovery Queue tabs
+- Side panel with sortable/filterable data table and D3 v7 force-directed network graph with geographic location nodes and community coloring
+- Python standalone visualizer (`tools/instagram_graph.py`) with PyVis + Louvain community detection
+- **Blocker logged:** CDN blocked by environment network policy — fetched D3.js via npm instead
+- PR #1 opened as draft, then merged by Hiya
+- Hiya needed guidance on loading unpacked: was selecting parent folder instead of `instagram-scraper-extension/` subfolder
+- Explained Chrome App OAuth client type required for `chrome.identity.getAuthToken()`, and how to pin extension ID with an OpenSSL-generated key
+
 ### 2026-04-18 (session 3) / 2026-04-19 — jaret
 - Built the Video Editing Orchestrator Agent System (Phases 1-3)
 - Source: Jaret's Google Doc "Architecting Autonomous Media" analyzing 10 agentic video editing implementations
