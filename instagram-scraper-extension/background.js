@@ -314,7 +314,7 @@ async function getServiceAccountToken() {
   const now = Math.floor(Date.now() / 1000);
   if (_cachedToken && _cachedTokenExpiry > now + 60) return _cachedToken;
 
-  const { serviceAccountKey } = await getState();
+  const { serviceAccountKey } = await chrome.storage.local.get('serviceAccountKey');
   if (!serviceAccountKey) throw new Error('No service account key saved. Paste it in the extension popup first.');
 
   const key = typeof serviceAccountKey === 'string' ? JSON.parse(serviceAccountKey) : serviceAccountKey;
