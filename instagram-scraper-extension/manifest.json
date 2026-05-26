@@ -1,0 +1,57 @@
+{
+  "manifest_version": 3,
+  "name": "Wisteria Cannabis Scraper",
+  "version": "1.0.0",
+  "description": "Cannabis Instagram account discovery, metric evaluation, and relationship mapping for Wisteria Farms.",
+
+  "permissions": [
+    "storage",
+    "identity",
+    "sidePanel",
+    "tabs",
+    "scripting"
+  ],
+
+  "host_permissions": [
+    "*://*.instagram.com/*",
+    "https://sheets.googleapis.com/*",
+    "https://accounts.google.com/*"
+  ],
+
+  "web_accessible_resources": [
+    {
+      "resources": ["inject.js", "lib/d3.v7.min.js"],
+      "matches": ["*://*.instagram.com/*"]
+    }
+  ],
+
+  "content_scripts": [
+    {
+      "matches": ["*://*.instagram.com/*"],
+      "js": ["content.js"],
+      "run_at": "document_start"
+    }
+  ],
+
+  "background": {
+    "service_worker": "background.js"
+  },
+
+  "side_panel": {
+    "default_path": "sidepanel/sidepanel.html"
+  },
+
+  "action": {
+    "default_popup": "popup/popup.html",
+    "default_icon": {
+      "128": "icons/icon128.png"
+    }
+  },
+
+  "oauth2": {
+    "client_id": "REPLACE_WITH_GOOGLE_CLIENT_ID",
+    "scopes": [
+      "https://www.googleapis.com/auth/spreadsheets"
+    ]
+  }
+}
