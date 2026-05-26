@@ -2,6 +2,19 @@ async function msg(type, payload = {}) {
   return chrome.runtime.sendMessage({ type, ...payload });
 }
 
+async function refreshKeyStatus() {
+  const { serviceAccountKey } = await chrome.storage.local.get('serviceAccountKey');
+  const el = document.getElementById('keyStatus');
+  if (serviceAccountKey) {
+    const email = serviceAccountKey.client_email || '(unknown)';
+    el.textContent = `✓ Key saved: ${email}`;
+    el.className = 'sheets-status sheets-ok';
+  } else {
+    el.textContent = 'No key saved';
+    el.className = 'sheets-status';
+  }
+}
+
 async function refreshState() {
   const state = await msg('GET_STATE');
   const total = (state.evaluated?.length || 0) + (state.pending || 0);
@@ -28,6 +41,18 @@ document.getElementById('btnStart').addEventListener('click', async () => {
 document.getElementById('btnStop').addEventListener('click', async () => {
   await msg('STOP_EVALUATION');
   refreshState();
+});
+
+document.getElementById('btnSaveKey').addEventListener('click', async () => {
+  const raw = document.getElementById('keyInput').value.trim();
+  if (!raw) return;
+  const res = await msg('SAVE_SERVICE_ACCOUNT_KEY', { key: raw });
+  if (res.ok) {
+    document.getElementById('keyInput').value = '';
+    await refreshKeyStatus();
+  } else {
+    alert(`Error saving key: ${res.error}`);
+  }
 });
 
 document.getElementById('btnSheets').addEventListener('click', async () => {
@@ -81,4 +106,5 @@ chrome.runtime.onMessage.addListener((msg) => {
 });
 
 refreshState();
+refreshKeyStatus();
 setInterval(refreshState, 5000);
