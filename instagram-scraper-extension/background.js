@@ -160,10 +160,6 @@ function randomDelay(min, max) {
   return Math.floor(Math.random() * (max - min)) + min;
 }
 
-async function sleep(ms) {
-  return new Promise(r => setTimeout(r, ms));
-}
-
 // --- Daily cap reset ---
 
 async function checkDailyCap() {
@@ -356,21 +352,34 @@ async function getServiceAccountToken() {
   return access_token;
 }
 
+// In-memory Sheets health (reset on service worker restart, that's fine).
+let _sheetsHealth = { status: 'unknown', lastError: null, lastSync: null };
+
 async function sheetsRequest(method, path, body) {
-  const token = await getServiceAccountToken();
-  const res = await fetch(`${SHEETS_API}/${SPREADSHEET_ID}${path}`, {
-    method,
-    headers: {
-      Authorization: `Bearer ${token}`,
-      'Content-Type': 'application/json'
-    },
-    body: body ? JSON.stringify(body) : undefined
-  });
-  if (!res.ok) {
-    const err = await res.text();
-    throw new Error(`Sheets API error ${res.status}: ${err}`);
+  const maxAttempts = 3;
+  let lastErr;
+  for (let attempt = 0; attempt < maxAttempts; attempt++) {
+    if (attempt > 0) await new Promise(r => setTimeout(r, 2000 * attempt));
+    try {
+      const token = await getServiceAccountToken();
+      const res = await fetch(`${SHEETS_API}/${SPREADSHEET_ID}${path}`, {
+        method,
+        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: body ? JSON.stringify(body) : undefined
+      });
+      if (!res.ok) {
+        const err = await res.text();
+        throw new Error(`Sheets API ${res.status}: ${err}`);
+      }
+      _sheetsHealth = { status: 'ok', lastError: null, lastSync: Date.now() };
+      return res.json();
+    } catch (e) {
+      lastErr = e;
+      _cachedToken = null; // force token refresh on next attempt
+    }
   }
-  return res.json();
+  _sheetsHealth = { status: 'error', lastError: lastErr.message, lastSync: _sheetsHealth.lastSync };
+  throw lastErr;
 }
 
 async function ensureSheet(sheetName, headers) {
@@ -456,136 +465,186 @@ async function handleInterceptedData(url, data) {
   }
 }
 
+function categorizeError(msg) {
+  if (!msg) return 'unknown';
+  const m = msg.toLowerCase();
+  if (m.includes('429') || m.includes('rate limit') || m.includes('too many')) return 'rate_limited';
+  if (m.includes('private')) return 'private_account';
+  if (m.includes('404') || m.includes('not found') || m.includes('does not exist')) return 'not_found';
+  if (m.includes('network') || m.includes('fetch') || m.includes('failed to fetch')) return 'network_error';
+  return 'no_data';
+}
+
 async function maybeFinalize(username) {
   const data = pendingProfileData[username];
   if (!data || !data.username) return;
-  // We have at least a username — extract whatever we have.
   const profile = extractProfileData(data);
   await saveAccount(profile);
   delete pendingProfileData[username];
 
   // Sync to Sheets.
+  let sheetsOk = true;
   try {
     await syncAccountToSheets(profile);
-    console.log(`[Wisteria] Synced ${username} to Sheets.`);
   } catch (e) {
+    sheetsOk = false;
     console.error(`[Wisteria] Sheets sync failed for ${username}:`, e.message);
-    const { syncErrors = [] } = await getState();
-    syncErrors.push({ username, error: e.message, time: Date.now() });
-    await setState({ syncErrors });
+    const { errors = [] } = await chrome.storage.local.get('errors');
+    errors.push({ username, errorType: 'sheets_sync', message: e.message, timestamp: Date.now() });
+    await chrome.storage.local.set({ errors: errors.slice(-200) });
   }
+
+  // Track evaluation timestamp for speed calculation.
+  const { evalTimestamps = [] } = await chrome.storage.local.get('evalTimestamps');
+  evalTimestamps.push(Date.now());
+  await chrome.storage.local.set({ evalTimestamps: evalTimestamps.slice(-20) });
 
   // Mark as done in the queue.
   const { queue = [] } = await getState();
-  const updated = queue.map(item =>
+  await setState({ queue: queue.map(item =>
     item.username === username ? { ...item, status: 'evaluated' } : item
-  );
-  await setState({ queue: updated });
+  )});
 
-  // Notify popup/sidepanel.
+  // Broadcast activity event for the live feed.
+  const event = {
+    type: 'ACTIVITY_EVENT',
+    event: {
+      kind: 'success',
+      username,
+      followers: profile.followers,
+      engagement: profile.engagement_rate,
+      timestamp: Date.now(),
+      sheetsOk
+    }
+  };
+  chrome.runtime.sendMessage(event).catch(() => {});
   chrome.runtime.sendMessage({ type: 'ACCOUNT_EVALUATED', profile }).catch(() => {});
 }
 
-// --- Autonomous evaluation loop ---
+async function recordQueueError(username, message) {
+  const errorType = categorizeError(message);
+  const { errors = [] } = await chrome.storage.local.get('errors');
+  errors.push({ username, errorType, message, timestamp: Date.now() });
+  await chrome.storage.local.set({ errors: errors.slice(-200) });
 
-let evaluationTabId = null;
+  const { queue = [] } = await getState();
+  await setState({ queue: queue.map(item =>
+    item.username === username ? { ...item, status: 'error' } : item
+  )});
+
+  chrome.runtime.sendMessage({
+    type: 'ACTIVITY_EVENT',
+    event: { kind: 'error', username, errorType, message, timestamp: Date.now() }
+  }).catch(() => {});
+}
+
+// --- Autonomous evaluation — alarm-based (survives service worker sleep) ---
+
+const ALARM_NAME = 'wisteria_next';
+let _evalTabId = null;
 
 async function startEvaluation() {
   const { running } = await getState();
   if (running) return;
-  await setState({ running: true, sessionCount: 0 });
+  await setState({ running: true, sessionCount: 0, currentAccount: '' });
   console.log('[Wisteria] Evaluation started.');
-  evaluationLoop();
+  chrome.alarms.create(ALARM_NAME, { delayInMinutes: 0 });
 }
 
 async function stopEvaluation() {
-  await setState({ running: false });
+  await setState({ running: false, currentAccount: '' });
+  await chrome.alarms.clear(ALARM_NAME);
   console.log('[Wisteria] Evaluation stopped.');
-  if (evaluationTabId) {
-    chrome.tabs.remove(evaluationTabId).catch(() => {});
-    evaluationTabId = null;
+  if (_evalTabId) {
+    chrome.tabs.remove(_evalTabId).catch(() => {});
+    _evalTabId = null;
   }
+  chrome.runtime.sendMessage({ type: 'PROGRESS' }).catch(() => {});
 }
 
-async function evaluationLoop() {
+async function processNextAccount() {
+  const state = await getState();
+  if (!state.running) return;
+
   const settings = await getSettings();
+  const dailyCount = await checkDailyCap();
 
-  while (true) {
-    const state = await getState();
-    if (!state.running) break;
-
-    const dailyCount = await checkDailyCap();
-    if (dailyCount >= settings.dailyCap) {
-      console.log(`[Wisteria] Daily cap of ${settings.dailyCap} reached. Stopping.`);
-      await stopEvaluation();
-      break;
-    }
-
-    if ((state.sessionCount || 0) >= settings.sessionCap) {
-      console.log(`[Wisteria] Session cap of ${settings.sessionCap} reached. Stopping.`);
-      await stopEvaluation();
-      break;
-    }
-
-    const queue = state.queue || [];
-    const next = queue.find(item => item.status === 'pending');
-    if (!next) {
-      console.log('[Wisteria] Queue exhausted.');
-      await stopEvaluation();
-      break;
-    }
-
-    // Mark in-progress.
-    const updated = queue.map(item =>
-      item.username === next.username ? { ...item, status: 'in_progress' } : item
-    );
-    await setState({ queue: updated });
-
-    // Navigate to profile.
-    const profileUrl = `https://www.instagram.com/${next.username}/`;
-    console.log(`[Wisteria] Evaluating: ${next.username}`);
-
-    try {
-      if (!evaluationTabId) {
-        const tab = await chrome.tabs.create({ url: profileUrl, active: false });
-        evaluationTabId = tab.id;
-      } else {
-        await chrome.tabs.update(evaluationTabId, { url: profileUrl });
-      }
-    } catch (e) {
-      console.error(`[Wisteria] Tab navigation failed for ${next.username}:`, e.message);
-      const queueSkip = (await getState()).queue.map(item =>
-        item.username === next.username ? { ...item, status: 'skipped' } : item
-      );
-      await setState({ queue: queueSkip });
-      continue;
-    }
-
-    // Wait for page to load and data to be intercepted.
-    const waitTime = randomDelay(settings.minDelay, settings.maxDelay);
-    await sleep(waitTime);
-
-    // Update counts.
-    const currentState = await getState();
-    const newSessionCount = (currentState.sessionCount || 0) + 1;
-    const newDailyCount = ((await checkDailyCap())) + 1;
-    await setState({ sessionCount: newSessionCount, dailyCount: newDailyCount });
-
-    // Jitter pause every N accounts.
-    if (newSessionCount % settings.jitterEvery === 0) {
-      const jitter = randomDelay(settings.jitterMin, settings.jitterMax);
-      console.log(`[Wisteria] Jitter pause: ${Math.round(jitter/1000)}s`);
-      await sleep(jitter);
-    }
-
-    chrome.runtime.sendMessage({
-      type: 'PROGRESS',
-      sessionCount: newSessionCount,
-      dailyCount: newDailyCount,
-      queueLength: queue.filter(i => i.status === 'pending').length - 1
-    }).catch(() => {});
+  if (dailyCount >= settings.dailyCap) {
+    console.log(`[Wisteria] Daily cap reached.`);
+    await stopEvaluation();
+    return;
   }
+  if ((state.sessionCount || 0) >= settings.sessionCap) {
+    console.log(`[Wisteria] Session cap reached.`);
+    await stopEvaluation();
+    return;
+  }
+
+  const queue = state.queue || [];
+  const next = queue.find(item => item.status === 'pending');
+  if (!next) {
+    console.log('[Wisteria] Queue exhausted.');
+    await stopEvaluation();
+    return;
+  }
+
+  // Mark in-progress and record current account for UI.
+  await setState({
+    queue: queue.map(item => item.username === next.username ? { ...item, status: 'in_progress' } : item),
+    currentAccount: next.username
+  });
+
+  // Broadcast current account to side panel.
+  chrome.runtime.sendMessage({ type: 'CURRENT_ACCOUNT', username: next.username }).catch(() => {});
+
+  // Navigate evaluation tab.
+  const profileUrl = `https://www.instagram.com/${next.username}/`;
+  try {
+    if (!_evalTabId) {
+      const tab = await chrome.tabs.create({ url: profileUrl, active: false });
+      _evalTabId = tab.id;
+    } else {
+      // Verify tab still exists before updating.
+      await chrome.tabs.get(_evalTabId).catch(async () => {
+        const tab = await chrome.tabs.create({ url: profileUrl, active: false });
+        _evalTabId = tab.id;
+      });
+      await chrome.tabs.update(_evalTabId, { url: profileUrl }).catch(async () => {
+        const tab = await chrome.tabs.create({ url: profileUrl, active: false });
+        _evalTabId = tab.id;
+      });
+    }
+  } catch (e) {
+    await recordQueueError(next.username, `Tab navigation failed: ${e.message}`);
+  }
+
+  // Update counts.
+  const newSessionCount = (state.sessionCount || 0) + 1;
+  const newDailyCount = dailyCount + 1;
+  await setState({ sessionCount: newSessionCount, dailyCount: newDailyCount });
+
+  // Schedule next alarm — use jitter delay every N accounts, otherwise normal delay.
+  let nextDelay = randomDelay(settings.minDelay, settings.maxDelay);
+  if (newSessionCount % settings.jitterEvery === 0) {
+    nextDelay = randomDelay(settings.jitterMin, settings.jitterMax);
+    console.log(`[Wisteria] Jitter pause: ${Math.round(nextDelay/1000)}s`);
+  }
+  chrome.alarms.create(ALARM_NAME, { delayInMinutes: nextDelay / 60000 });
+
+  chrome.runtime.sendMessage({
+    type: 'PROGRESS',
+    sessionCount: newSessionCount,
+    dailyCount: newDailyCount,
+    pending: queue.filter(i => i.status === 'pending').length - 1
+  }).catch(() => {});
 }
+
+// Alarm listener — wakes the service worker and processes the next account.
+chrome.alarms.onAlarm.addListener(async (alarm) => {
+  if (alarm.name === ALARM_NAME) {
+    await processNextAccount();
+  }
+});
 
 // --- Message router ---
 
@@ -610,15 +669,20 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
 
       case 'GET_STATE': {
         const state = await getState();
+        const { errors = [], evalTimestamps = [] } = await chrome.storage.local.get(['errors', 'evalTimestamps']);
         const evaluated = state.evaluated || [];
         const queue = state.queue || [];
         sendResponse({
           evaluated,
           queue,
+          errors,
+          evalTimestamps,
           running: state.running || false,
+          currentAccount: state.currentAccount || '',
           sessionCount: state.sessionCount || 0,
           dailyCount: state.dailyCount || 0,
-          pending: queue.filter(i => i.status === 'pending').length
+          pending: queue.filter(i => i.status === 'pending').length,
+          sheetsHealth: _sheetsHealth
         });
         break;
       }
@@ -637,9 +701,27 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
       }
 
       case 'RESET_QUEUE':
-        await setState({ queue: [], evaluated: [], sessionCount: 0, dailyCount: 0 });
+        await setState({ queue: [], evaluated: [], sessionCount: 0, dailyCount: 0, currentAccount: '' });
+        await chrome.storage.local.set({ errors: [], evalTimestamps: [] });
         sendResponse({ ok: true });
         break;
+
+      case 'RETRY_ACCOUNT': {
+        const { username } = msg;
+        const { queue = [] } = await getState();
+        const { errors = [] } = await chrome.storage.local.get('errors');
+        const updatedQueue = queue.map(item =>
+          item.username === username ? { ...item, status: 'pending' } : item
+        );
+        // If not in queue at all, add it.
+        if (!updatedQueue.some(item => item.username === username)) {
+          updatedQueue.push({ username, source: 'retry', status: 'pending', added: Date.now() });
+        }
+        await setState({ queue: updatedQueue });
+        await chrome.storage.local.set({ errors: errors.filter(e => e.username !== username) });
+        sendResponse({ ok: true });
+        break;
+      }
 
       case 'SAVE_SERVICE_ACCOUNT_KEY': {
         try {

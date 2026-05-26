@@ -1,28 +1,197 @@
+// Wisteria side panel — full dashboard controller.
+
 let allAccounts = [];
-let currentView = 'table';
-let simulation = null;
+let allErrors = [];
+let currentTab = 'table';
+let feedPaused = false;
+let d3Simulation = null;
+
+// ── Messaging ──
 
 async function msg(type, payload = {}) {
   return chrome.runtime.sendMessage({ type, ...payload });
 }
 
+// ── Number formatting ──
+
 function fmt(n) {
-  if (!n) return '0';
+  if (!n && n !== 0) return '—';
   if (n >= 1000000) return (n / 1000000).toFixed(1) + 'M';
   if (n >= 1000) return (n / 1000).toFixed(1) + 'K';
-  return n.toString();
+  return String(n);
 }
 
-function engClass(rate) {
-  if (rate >= 3) return 'eng-high';
-  if (rate >= 1) return 'eng-med';
+function fmtTime(ts) {
+  const d = new Date(ts);
+  return d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
+}
+
+function timeAgo(ts) {
+  const s = Math.floor((Date.now() - ts) / 1000);
+  if (s < 60) return `${s}s ago`;
+  if (s < 3600) return `${Math.floor(s/60)}m ago`;
+  return `${Math.floor(s/3600)}h ago`;
+}
+
+function engClass(r) {
+  if (r >= 3) return 'eng-high';
+  if (r >= 1) return 'eng-med';
   return 'eng-low';
 }
 
+// ── Control bar ──
+
+document.getElementById('btnStart').addEventListener('click', async () => {
+  await msg('START_EVALUATION');
+  await refreshAll();
+});
+
+document.getElementById('btnStop').addEventListener('click', async () => {
+  await msg('STOP_EVALUATION');
+  await refreshAll();
+});
+
+// ── Monitor strip ──
+
+const RING_CIRCUMFERENCE = 2 * Math.PI * 20; // r=20 → 125.66
+
+function updateMonitor(state) {
+  const { evaluated = [], pending = 0, errors = [], running, currentAccount, sessionCount, dailyCount, evalTimestamps = [], sheetsHealth } = state;
+  const total = evaluated.length + pending;
+  const pct = total > 0 ? Math.round(evaluated.length / total * 100) : 0;
+
+  // Status dot + current account.
+  const dot = document.getElementById('statusDot');
+  dot.className = 'status-dot' + (running ? ' running' : '');
+  const caEl = document.getElementById('currentAccount');
+  if (running && currentAccount) {
+    caEl.innerHTML = `Evaluating <strong>@${currentAccount}</strong>`;
+  } else if (running) {
+    caEl.innerHTML = '<strong>Running…</strong>';
+  } else {
+    caEl.innerHTML = `Stopped — ${evaluated.length} evaluated`;
+  }
+
+  // Start/stop buttons.
+  document.getElementById('btnStart').style.display = running ? 'none' : '';
+  document.getElementById('btnStop').style.display  = running ? '' : 'none';
+
+  // Progress ring.
+  const offset = RING_CIRCUMFERENCE * (1 - pct / 100);
+  document.getElementById('progressRingFill').style.strokeDashoffset = offset;
+  document.getElementById('progressRingLabel').textContent = pct + '%';
+
+  // Stat pills.
+  document.getElementById('statEval').textContent = fmt(evaluated.length);
+  document.getElementById('statPending').textContent = fmt(pending);
+  document.getElementById('statErrors').textContent = fmt(errors.length);
+
+  // Errors tab label.
+  document.getElementById('errorsTabBtn').textContent = `Errors${errors.length ? ` (${errors.length})` : ''}`;
+
+  // Speed / ETA.
+  const speedEl = document.getElementById('speedEta');
+  if (evalTimestamps.length >= 2) {
+    const window = evalTimestamps.slice(-10);
+    const elapsed = (window[window.length - 1] - window[0]) / 1000;
+    const rate = elapsed > 0 ? ((window.length - 1) / elapsed) * 3600 : 0;
+    const etaSec = rate > 0 ? Math.round(pending / (rate / 3600)) : 0;
+    const etaStr = etaSec > 3600 ? `~${Math.round(etaSec/3600)}h` : etaSec > 60 ? `~${Math.round(etaSec/60)}m` : `~${etaSec}s`;
+    speedEl.textContent = `${rate.toFixed(1)}/hr · ETA ${etaStr} · Session ${sessionCount} · Daily ${dailyCount}`;
+  } else {
+    speedEl.textContent = running ? `Session ${sessionCount || 0} · Daily ${dailyCount || 0}` : '—';
+  }
+
+  // Sheets health.
+  const pill = document.getElementById('sheetsHealthPill');
+  const h = sheetsHealth || { status: 'unknown' };
+  if (h.status === 'ok') {
+    pill.className = 'sheets-pill ok';
+    pill.textContent = `☁ Synced${h.lastSync ? ' ' + timeAgo(h.lastSync) : ''}`;
+    pill.title = `Last sync: ${h.lastSync ? new Date(h.lastSync).toLocaleTimeString() : '—'}`;
+  } else if (h.status === 'error') {
+    pill.className = 'sheets-pill error';
+    pill.textContent = '⚠ Sync error';
+    pill.title = h.lastError || '';
+  } else {
+    pill.className = 'sheets-pill unknown';
+    pill.textContent = '☁ Sheets';
+    pill.title = '';
+  }
+}
+
+// ── Activity feed ──
+
+const feedRows = document.getElementById('feedRows');
+const feedScroll = document.getElementById('feedScroll');
+const MAX_FEED_ROWS = 50;
+
+function appendFeedRow(event) {
+  if (feedPaused) return;
+  const { kind, username, followers, engagement, errorType, message, timestamp } = event;
+
+  const row = document.createElement('div');
+  row.className = 'feed-row';
+
+  const icon = kind === 'success' ? '✓' : '✗';
+  const iconColor = kind === 'success' ? '#22c55e' : '#ef4444';
+  const metaHtml = kind === 'success'
+    ? `<span class="feed-meta">${fmt(followers)} · ${(engagement||0).toFixed(1)}%</span>`
+    : `<span class="feed-meta err">${errorType || 'error'}</span>`;
+
+  row.innerHTML = `
+    <span class="feed-icon" style="color:${iconColor}">${icon}</span>
+    <span class="feed-time">${fmtTime(timestamp)}</span>
+    <span class="feed-user">@${username}</span>
+    ${metaHtml}`;
+
+  feedRows.insertBefore(row, feedRows.firstChild);
+
+  // Trim old rows.
+  while (feedRows.children.length > MAX_FEED_ROWS) {
+    feedRows.removeChild(feedRows.lastChild);
+  }
+}
+
+// Feed toggle collapse.
+document.getElementById('feedToggle').addEventListener('click', () => {
+  document.getElementById('feedSection').classList.toggle('collapsed');
+});
+
+// ── Errors tab ──
+
+function renderErrors(errors) {
+  const container = document.getElementById('errorRows');
+  const empty = document.getElementById('errorsEmpty');
+  if (!errors.length) {
+    empty.style.display = 'block';
+    container.innerHTML = '';
+    return;
+  }
+  empty.style.display = 'none';
+  container.innerHTML = errors.slice().reverse().map(e => `
+    <div class="error-row">
+      <span class="error-badge badge-${e.errorType || 'unknown'}">${(e.errorType || 'unknown').replace('_', ' ')}</span>
+      <span class="error-user">@${e.username}</span>
+      <span class="error-time">${fmtTime(e.timestamp)}</span>
+      <button class="retry-btn" data-username="${e.username}">Retry</button>
+    </div>`).join('');
+
+  container.querySelectorAll('.retry-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const username = btn.dataset.username;
+      await msg('RETRY_ACCOUNT', { username });
+      await refreshAll();
+    });
+  });
+}
+
+// ── Table ──
+
 function getFilters() {
   return {
-    minFollowers: parseInt(document.getElementById('fMinFollowers').value) || 0,
-    minEng: parseFloat(document.getElementById('fMinEng').value) || 0,
+    minFollowers: parseInt(document.getElementById('fFollowers').value) || 0,
+    minEng: parseFloat(document.getElementById('fEng').value) || 0,
     state: document.getElementById('fState').value.trim().toUpperCase(),
     sort: document.getElementById('fSort').value
   };
@@ -43,270 +212,276 @@ function renderTable(accounts) {
   const table = document.getElementById('dataTable');
   const tbody = document.getElementById('tableBody');
 
-  if (filtered.length === 0) {
+  if (!filtered.length) {
     empty.style.display = 'block';
     table.style.display = 'none';
     return;
   }
-
   empty.style.display = 'none';
   table.style.display = 'table';
+
   tbody.innerHTML = filtered.map(a => {
-    const loc = [a.city, a.state, a.country].filter(Boolean).join(', ') || '—';
-    const locHint = a.location_source === 'bio_inferred' ? ' *' : '';
-    return `
-      <tr>
-        <td class="username-cell">
-          <a href="https://www.instagram.com/${a.username}/" target="_blank">@${a.username}</a>
-        </td>
-        <td>${fmt(a.followers)}</td>
-        <td class="${engClass(a.engagement_rate)}">${(a.engagement_rate || 0).toFixed(2)}%</td>
-        <td>${fmt(a.avg_video_views)}</td>
-        <td>${fmt(a.avg_likes)}</td>
-        <td>${fmt(a.post_count)}</td>
-        <td class="location-cell">${loc}${locHint}</td>
-        <td>${a.email || '—'}</td>
-        <td>${a.verified === 'Yes' ? '<span class="verified-yes">✓ Yes</span>' : 'No'}</td>
-        <td>${a.last_post_date || '—'}</td>
-      </tr>`;
+    const loc = [a.city, a.state].filter(Boolean).join(', ') || (a.country || '—');
+    return `<tr>
+      <td><a class="user-link" href="https://www.instagram.com/${a.username}/" target="_blank">@${a.username}</a></td>
+      <td>${fmt(a.followers)}</td>
+      <td class="${engClass(a.engagement_rate)}">${(a.engagement_rate||0).toFixed(2)}%</td>
+      <td>${fmt(a.avg_video_views)}</td>
+      <td>${fmt(a.avg_likes)}</td>
+      <td class="loc-cell">${loc}</td>
+      <td>${a.email || '—'}</td>
+      <td>${a.verified === 'Yes' ? '✓' : ''}</td>
+    </tr>`;
   }).join('');
-}
 
-function updateSummary(accounts) {
-  const total = accounts.length;
+  // Summary bar.
   const withEmail = accounts.filter(a => a.email).length;
-  const avgEng = total > 0
-    ? (accounts.reduce((s, a) => s + (a.engagement_rate || 0), 0) / total).toFixed(2)
-    : '0.00';
+  const avgEng = accounts.length ? (accounts.reduce((s, a) => s + (a.engagement_rate || 0), 0) / accounts.length).toFixed(2) : '0.00';
   const states = [...new Set(accounts.map(a => a.state).filter(Boolean))].length;
-  document.getElementById('statSummary').innerHTML =
-    `<span>Accounts: <strong>${total}</strong></span>` +
-    `<span>Avg engagement: <strong>${avgEng}%</strong></span>` +
-    `<span>With email: <strong>${withEmail}</strong></span>` +
-    `<span>States detected: <strong>${states}</strong></span>` +
-    `<small style="color:#444">* = location inferred from bio</small>`;
+  document.getElementById('statBar').innerHTML =
+    `Total: <strong>${accounts.length}</strong> &nbsp;
+     Showing: <strong>${filtered.length}</strong> &nbsp;
+     Avg engagement: <strong>${avgEng}%</strong> &nbsp;
+     With email: <strong>${withEmail}</strong> &nbsp;
+     States: <strong>${states}</strong>`;
 }
 
-// --- D3 Network Graph ---
+document.getElementById('btnFilter').addEventListener('click', () => renderTable(allAccounts));
+
+// ── CSV export ──
+
+document.getElementById('btnExport').addEventListener('click', () => {
+  const filtered = applyFilters(allAccounts);
+  const headers = ['username','followers','following','post_count','avg_likes','avg_comments','avg_video_views','engagement_rate','bio','email','verified','last_post_date','city','state','country','profile_url','evaluated_at'];
+  const rows = [headers, ...filtered.map(a => headers.map(h => {
+    const v = a[h] ?? '';
+    return typeof v === 'string' && (v.includes(',') || v.includes('"')) ? `"${v.replace(/"/g, '""')}"` : v;
+  }))];
+  const blob = new Blob([rows.map(r => r.join(',')).join('\n')], { type: 'text/csv' });
+  const url = URL.createObjectURL(blob);
+  const el = document.createElement('a');
+  el.href = url;
+  el.download = `cannabis_accounts_${new Date().toISOString().split('T')[0]}.csv`;
+  el.click();
+  URL.revokeObjectURL(url);
+});
+
+// ── D3 Graph ──
 
 function renderGraph(accounts) {
-  const filtered = applyFilters(accounts);
   const svg = d3.select('#graphSvg');
   svg.selectAll('*').remove();
+  if (!accounts.length) return;
 
-  if (filtered.length === 0) return;
+  const el = document.getElementById('pane-graph');
+  const width = el.clientWidth || 400;
+  const height = el.clientHeight || 500;
 
-  const width = document.getElementById('graphSvg').clientWidth;
-  const height = document.getElementById('graphSvg').clientHeight;
+  const filtered = applyFilters(accounts);
+  const maxF = d3.max(filtered, d => d.followers) || 1;
+  const rScale = d3.scaleSqrt().domain([0, maxF]).range([4, 20]);
 
-  // Build nodes: account nodes + location nodes.
-  const accountNodes = filtered.map(a => ({
-    id: a.username,
-    type: 'account',
-    data: a,
-    followers: a.followers || 0,
-    engRate: a.engagement_rate || 0
-  }));
-
-  // Unique locations from accounts.
-  const locationMap = new Map();
+  // Build location nodes.
+  const locCount = {};
   filtered.forEach(a => {
-    if (a.city) {
-      const key = `${a.city}, ${a.state || a.country}`.trim().replace(/^,\s*/, '');
-      if (!locationMap.has(key)) locationMap.set(key, { id: key, type: 'city', count: 0 });
-      locationMap.get(key).count++;
-    }
-    if (a.state && !a.city) {
-      const key = a.state;
-      if (!locationMap.has(key)) locationMap.set(key, { id: key, type: 'state', count: 0 });
-      locationMap.get(key).count++;
-    }
+    const k = a.state || a.country;
+    if (k) locCount[k] = (locCount[k] || 0) + 1;
   });
-  const locationNodes = [...locationMap.values()].filter(l => l.count >= 2); // Only show locations with 2+ accounts.
-  const locationSet = new Set(locationNodes.map(l => l.id));
+  const locNodes = Object.entries(locCount).filter(([,c]) => c >= 2).map(([id, count]) => ({ id, type: 'location', count }));
+  const locSet = new Set(locNodes.map(l => l.id));
 
-  const nodes = [...accountNodes, ...locationNodes];
+  const accNodes = filtered.map(a => ({ id: a.username, type: 'account', data: a }));
+  const nodes = [...accNodes, ...locNodes];
 
-  // Edges: account → location.
   const links = [];
   filtered.forEach(a => {
-    if (a.city) {
-      const key = `${a.city}, ${a.state || a.country}`.trim().replace(/^,\s*/, '');
-      if (locationSet.has(key)) {
-        links.push({ source: a.username, target: key, type: 'geo' });
-      }
-    } else if (a.state) {
-      if (locationSet.has(a.state)) {
-        links.push({ source: a.username, target: a.state, type: 'geo' });
-      }
-    }
+    const k = a.state || a.country;
+    if (k && locSet.has(k)) links.push({ source: a.username, target: k, type: 'geo' });
   });
 
-  // Node sizing.
-  const maxFollowers = d3.max(accountNodes, d => d.followers) || 1;
-  const rScale = d3.scaleSqrt().domain([0, maxFollowers]).range([4, 22]);
-
-  const engColor = (rate) => {
-    if (rate >= 3) return '#22c55e';
-    if (rate >= 1) return '#f59e0b';
-    return '#ef4444';
-  };
-
-  // Zoom/pan container.
+  const engColor = r => r >= 3 ? '#22c55e' : r >= 1 ? '#f59e0b' : '#ef4444';
   const g = svg.append('g');
-  svg.call(d3.zoom().scaleExtent([0.2, 5]).on('zoom', e => g.attr('transform', e.transform)));
+  svg.call(d3.zoom().scaleExtent([0.15, 6]).on('zoom', e => g.attr('transform', e.transform)));
 
-  // Links.
-  const link = g.append('g').selectAll('line')
-    .data(links)
-    .join('line')
-    .attr('class', d => `link${d.type === 'geo' ? ' geo-link' : ''}`)
-    .attr('stroke', d => d.type === 'geo' ? '#4c1d95' : '#333')
-    .attr('stroke-opacity', 0.5)
-    .attr('stroke-dasharray', d => d.type === 'geo' ? '3,2' : null);
+  const link = g.append('g').selectAll('line').data(links).join('line')
+    .attr('class', d => `link${d.type === 'geo' ? ' geo-link' : ''}`);
 
-  // Nodes.
-  const node = g.append('g').selectAll('g')
-    .data(nodes)
-    .join('g')
-    .attr('class', 'node')
+  const node = g.append('g').selectAll('g').data(nodes).join('g').attr('class', 'node')
     .call(d3.drag()
-      .on('start', (e, d) => { if (!e.active) simulation.alphaTarget(0.3).restart(); d.fx = d.x; d.fy = d.y; })
-      .on('drag', (e, d) => { d.fx = e.x; d.fy = e.y; })
-      .on('end', (e, d) => { if (!e.active) simulation.alphaTarget(0); d.fx = null; d.fy = null; }));
+      .on('start', (e, d) => { if (!e.active) sim.alphaTarget(0.3).restart(); d.fx = d.x; d.fy = d.y; })
+      .on('drag',  (e, d) => { d.fx = e.x; d.fy = e.y; })
+      .on('end',   (e, d) => { if (!e.active) sim.alphaTarget(0); d.fx = null; d.fy = null; }));
 
-  // Account nodes = circles.
-  node.filter(d => d.type === 'account')
-    .append('circle')
-    .attr('r', d => rScale(d.followers))
-    .attr('fill', d => engColor(d.engRate))
-    .attr('fill-opacity', 0.85)
-    .attr('stroke', '#0d0d0d')
-    .attr('stroke-width', 1.5);
+  node.filter(d => d.type === 'account').append('circle')
+    .attr('r', d => rScale(d.data.followers))
+    .attr('fill', d => engColor(d.data.engagement_rate || 0))
+    .attr('fill-opacity', 0.85);
 
-  // Location nodes = diamonds/rectangles.
-  node.filter(d => d.type !== 'account')
-    .append('rect')
-    .attr('x', -8).attr('y', -8)
-    .attr('width', 16).attr('height', 16)
-    .attr('rx', 2)
-    .attr('fill', '#7c3aed')
-    .attr('fill-opacity', 0.9)
-    .attr('stroke', '#0d0d0d')
-    .attr('stroke-width', 1.5)
-    .attr('transform', 'rotate(45)');
+  node.filter(d => d.type === 'location').append('rect')
+    .attr('x', -7).attr('y', -7).attr('width', 14).attr('height', 14).attr('rx', 2)
+    .attr('fill', '#7c3aed').attr('fill-opacity', 0.9).attr('transform', 'rotate(45)');
 
-  // Labels for location nodes + large account nodes.
   node.append('text')
-    .attr('dy', d => d.type === 'account' ? rScale(d.followers) + 10 : 16)
+    .attr('dy', d => d.type === 'account' ? rScale(d.data?.followers || 0) + 9 : 14)
     .attr('text-anchor', 'middle')
-    .attr('font-size', d => d.type === 'account' ? '8px' : '9px')
-    .attr('fill', d => d.type === 'account' ? '#aaa' : '#c084fc')
+    .attr('font-size', d => d.type === 'location' ? '9px' : '8px')
+    .attr('fill', d => d.type === 'location' ? '#c084fc' : '#999')
     .text(d => d.type === 'account'
-      ? (d.followers > 10000 ? `@${d.id}` : '') // Only label bigger accounts.
+      ? (d.data.followers > 5000 ? `@${d.id}` : '')
       : d.id);
 
-  // Tooltip.
   const tooltip = document.getElementById('tooltip');
   node.on('mouseover', (event, d) => {
     let html = '';
     if (d.type === 'account') {
       const a = d.data;
       html = `<strong>@${a.username}</strong>
-        Followers: ${fmt(a.followers)}<br>
-        Engagement: ${(a.engagement_rate || 0).toFixed(2)}%<br>
-        Avg views: ${fmt(a.avg_video_views)}<br>
-        ${[a.city, a.state, a.country].filter(Boolean).join(', ') || 'Location unknown'}<br>
-        ${a.email ? `Email: ${a.email}` : ''}`;
+        ${fmt(a.followers)} followers<br>
+        ${(a.engagement_rate||0).toFixed(2)}% engagement<br>
+        ${fmt(a.avg_video_views)} avg views<br>
+        ${[a.city, a.state].filter(Boolean).join(', ') || 'Location unknown'}
+        ${a.email ? `<br>${a.email}` : ''}`;
     } else {
-      html = `<strong>${d.id}</strong>Location node<br>${d.count} account(s) here`;
+      html = `<strong>${d.id}</strong>${d.count} account(s)`;
     }
     tooltip.innerHTML = html;
     tooltip.style.display = 'block';
-    tooltip.style.left = (event.offsetX + 12) + 'px';
-    tooltip.style.top = (event.offsetY - 10) + 'px';
-  }).on('mousemove', (event) => {
-    tooltip.style.left = (event.offsetX + 12) + 'px';
-    tooltip.style.top = (event.offsetY - 10) + 'px';
-  }).on('mouseout', () => {
-    tooltip.style.display = 'none';
-  });
+  }).on('mousemove', e => {
+    tooltip.style.left = (e.offsetX + 12) + 'px';
+    tooltip.style.top  = (e.offsetY - 8) + 'px';
+  }).on('mouseout', () => { tooltip.style.display = 'none'; });
 
-  // Force simulation.
-  simulation = d3.forceSimulation(nodes)
+  const sim = d3Simulation = d3.forceSimulation(nodes)
     .force('link', d3.forceLink(links).id(d => d.id).distance(60).strength(0.3))
-    .force('charge', d3.forceManyBody().strength(-120))
+    .force('charge', d3.forceManyBody().strength(-100))
     .force('center', d3.forceCenter(width / 2, height / 2))
-    .force('collision', d3.forceCollide(d => d.type === 'account' ? rScale(d.followers) + 4 : 16))
+    .force('collision', d3.forceCollide(d => d.type === 'account' ? rScale(d.data?.followers || 0) + 4 : 14))
     .on('tick', () => {
-      link
-        .attr('x1', d => d.source.x).attr('y1', d => d.source.y)
-        .attr('x2', d => d.target.x).attr('y2', d => d.target.y);
+      link.attr('x1', d => d.source.x).attr('y1', d => d.source.y)
+          .attr('x2', d => d.target.x).attr('y2', d => d.target.y);
       node.attr('transform', d => `translate(${d.x},${d.y})`);
     });
 }
 
-// --- Tab switching ---
+// ── Tab switching ──
 
-document.getElementById('tabTable').addEventListener('click', () => {
-  currentView = 'table';
-  document.getElementById('tabTable').classList.add('active');
-  document.getElementById('tabGraph').classList.remove('active');
-  document.getElementById('tableView').style.display = 'block';
-  document.getElementById('graphView').style.display = 'none';
-  renderTable(allAccounts);
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const tab = btn.dataset.tab;
+    currentTab = tab;
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
+    document.querySelectorAll('.tab-pane').forEach(p => p.classList.toggle('active', p.id === `pane-${tab}`));
+    if (tab === 'graph') renderGraph(allAccounts);
+    if (tab === 'errors') renderErrors(allErrors);
+  });
 });
 
-document.getElementById('tabGraph').addEventListener('click', () => {
-  currentView = 'graph';
-  document.getElementById('tabGraph').classList.add('active');
-  document.getElementById('tabTable').classList.remove('active');
-  document.getElementById('tableView').style.display = 'none';
-  document.getElementById('graphView').style.display = 'block';
-  renderGraph(allAccounts);
+// ── Settings drawer ──
+
+function openDrawer() {
+  document.getElementById('settingsDrawer').classList.add('open');
+  document.getElementById('drawerOverlay').classList.add('open');
+}
+function closeDrawer() {
+  document.getElementById('settingsDrawer').classList.remove('open');
+  document.getElementById('drawerOverlay').classList.remove('open');
+}
+document.getElementById('btnSettings').addEventListener('click', openDrawer);
+document.getElementById('drawerClose').addEventListener('click', closeDrawer);
+document.getElementById('drawerOverlay').addEventListener('click', closeDrawer);
+
+// Range value display.
+['settMinDelay', 'settMaxDelay'].forEach(id => {
+  const el = document.getElementById(id);
+  const valEl = document.getElementById(id + 'Val');
+  el.addEventListener('input', () => { valEl.textContent = el.value + 's'; });
 });
 
-document.getElementById('btnApplyFilters').addEventListener('click', () => {
-  if (currentView === 'table') renderTable(allAccounts);
-  else renderGraph(allAccounts);
+document.getElementById('btnSaveSettings').addEventListener('click', async () => {
+  const settings = {
+    minDelay: parseInt(document.getElementById('settMinDelay').value) * 1000,
+    maxDelay: parseInt(document.getElementById('settMaxDelay').value) * 1000,
+    sessionCap: parseInt(document.getElementById('settSessionCap').value),
+    dailyCap: parseInt(document.getElementById('settDailyCap').value),
+    jitterEvery: parseInt(document.getElementById('settJitterEvery').value),
+    jitterMin: 30000,
+    jitterMax: 60000
+  };
+  await msg('UPDATE_SETTINGS', { settings });
+  closeDrawer();
 });
 
-// --- CSV Export ---
-
-document.getElementById('btnExport').addEventListener('click', () => {
-  const filtered = applyFilters(allAccounts);
-  const headers = [
-    'username','followers','following','post_count','avg_likes','avg_comments',
-    'avg_video_views','engagement_rate','bio','email','verified','last_post_date',
-    'city','state','country','location_source','profile_url','evaluated_at'
-  ];
-  const rows = [headers, ...filtered.map(a => headers.map(h => {
-    const v = a[h] ?? '';
-    return typeof v === 'string' && v.includes(',') ? `"${v.replace(/"/g, '""')}"` : v;
-  }))];
-  const csv = rows.map(r => r.join(',')).join('\n');
-  const blob = new Blob([csv], { type: 'text/csv' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `cannabis_accounts_${new Date().toISOString().split('T')[0]}.csv`;
-  a.click();
-  URL.revokeObjectURL(url);
+document.getElementById('btnResetQueue').addEventListener('click', async () => {
+  if (!confirm('Reset ALL data and queue? This cannot be undone.')) return;
+  await msg('RESET_QUEUE');
+  allAccounts = [];
+  allErrors = [];
+  await refreshAll();
+  closeDrawer();
 });
 
-// --- Load & refresh ---
-
-async function loadData() {
-  const state = await msg('GET_STATE');
-  allAccounts = state.evaluated || [];
-  updateSummary(allAccounts);
-  if (currentView === 'table') renderTable(allAccounts);
-  else renderGraph(allAccounts);
+// Key management in drawer.
+async function refreshDrawerKey() {
+  const { serviceAccountKey } = await chrome.storage.local.get('serviceAccountKey');
+  const emailEl = document.getElementById('drawerKeyEmail');
+  const noneEl  = document.getElementById('drawerKeyNone');
+  if (serviceAccountKey) {
+    emailEl.textContent = serviceAccountKey.client_email || '(unknown)';
+    emailEl.style.display = 'block';
+    noneEl.style.display  = 'none';
+  } else {
+    emailEl.style.display = 'none';
+    noneEl.style.display  = 'block';
+  }
 }
 
-chrome.runtime.onMessage.addListener((m) => {
-  if (m.type === 'ACCOUNT_EVALUATED' || m.type === 'PROGRESS') loadData();
+document.getElementById('drawerKeySave').addEventListener('click', async () => {
+  const raw = document.getElementById('drawerKeyInput').value.trim();
+  if (!raw) return;
+  const res = await msg('SAVE_SERVICE_ACCOUNT_KEY', { key: raw });
+  if (res.ok) {
+    document.getElementById('drawerKeyInput').value = '';
+    await refreshDrawerKey();
+  } else {
+    alert('Error saving key: ' + res.error);
+  }
 });
 
-loadData();
-setInterval(loadData, 10000);
+// ── Main data loader ──
+
+async function refreshAll() {
+  const state = await msg('GET_STATE');
+  allAccounts = state.evaluated || [];
+  allErrors   = state.errors   || [];
+
+  updateMonitor(state);
+
+  if (currentTab === 'table') renderTable(allAccounts);
+  if (currentTab === 'graph') renderGraph(allAccounts);
+  if (currentTab === 'errors') renderErrors(allErrors);
+}
+
+// ── Real-time message listener ──
+
+chrome.runtime.onMessage.addListener((m) => {
+  if (m.type === 'ACTIVITY_EVENT') {
+    appendFeedRow(m.event);
+    if (m.event.kind === 'error') allErrors.push(m.event);
+    if (currentTab === 'errors') renderErrors(allErrors);
+  }
+  if (m.type === 'ACCOUNT_EVALUATED') {
+    allAccounts = allAccounts.filter(a => a.username !== m.profile.username);
+    allAccounts.push(m.profile);
+    if (currentTab === 'table') renderTable(allAccounts);
+    if (currentTab === 'graph') renderGraph(allAccounts);
+  }
+  if (m.type === 'PROGRESS' || m.type === 'CURRENT_ACCOUNT') {
+    refreshAll();
+  }
+});
+
+// ── Init ──
+
+refreshAll();
+refreshDrawerKey();
+setInterval(refreshAll, 8000);

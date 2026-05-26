@@ -6,151 +6,92 @@
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-      width: 320px;
+      width: 260px;
       background: #0d0d0d;
       color: #f0f0f0;
-      font-size: 13px;
+      font-size: 12px;
     }
     .header {
       background: linear-gradient(135deg, #2d1b69, #1a0a3a);
-      padding: 14px 16px 12px;
+      padding: 12px 14px 10px;
       border-bottom: 1px solid #3a2060;
+      display: flex; align-items: center; gap: 8px;
     }
-    .header h1 { font-size: 15px; font-weight: 700; color: #c084fc; letter-spacing: 0.3px; }
-    .header p { font-size: 11px; color: #888; margin-top: 2px; }
-    .section { padding: 12px 16px; border-bottom: 1px solid #1f1f1f; }
-    .section-title { font-size: 11px; font-weight: 600; color: #888; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
-    .stat-row { display: flex; justify-content: space-between; margin-bottom: 4px; }
-    .stat-label { color: #888; }
-    .stat-value { font-weight: 600; color: #c084fc; }
-    .progress-bar-outer { background: #1f1f1f; border-radius: 4px; height: 6px; margin: 8px 0 4px; }
-    .progress-bar-inner { background: linear-gradient(90deg, #7c3aed, #c084fc); border-radius: 4px; height: 6px; transition: width 0.4s; }
-    .progress-label { font-size: 11px; color: #666; }
+    .header h1 { font-size: 13px; font-weight: 700; color: #c084fc; flex: 1; }
+    .status-dot {
+      width: 7px; height: 7px; border-radius: 50%; background: #555;
+      flex-shrink: 0;
+    }
+    .status-dot.running {
+      background: #22c55e;
+      box-shadow: 0 0 0 0 rgba(34,197,94,0.6);
+      animation: pulse 1.8s infinite;
+    }
+    @keyframes pulse {
+      0%   { box-shadow: 0 0 0 0 rgba(34,197,94,0.6); }
+      70%  { box-shadow: 0 0 0 5px rgba(34,197,94,0); }
+      100% { box-shadow: 0 0 0 0 rgba(34,197,94,0); }
+    }
+    .status-text { font-size: 10px; color: #888; }
+    .section { padding: 12px 14px; border-bottom: 1px solid #1a1a1a; }
     .btn {
-      width: 100%;
-      padding: 9px 12px;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-      font-size: 13px;
-      font-weight: 600;
-      margin-bottom: 6px;
-      transition: opacity 0.15s;
+      width: 100%; padding: 9px 12px;
+      border: none; border-radius: 6px;
+      cursor: pointer; font-size: 12px; font-weight: 600;
+      margin-bottom: 6px; transition: opacity 0.15s;
     }
     .btn:hover { opacity: 0.85; }
-    .btn-primary { background: #7c3aed; color: #fff; }
-    .btn-danger { background: #991b1b; color: #fff; }
-    .btn-secondary { background: #1f1f1f; color: #ccc; border: 1px solid #333; }
-    .btn-sheets { background: #166534; color: #fff; }
-    .btn:disabled { opacity: 0.4; cursor: not-allowed; }
-    .input-row { display: flex; gap: 6px; margin-bottom: 6px; }
-    .input-row input {
-      flex: 1;
-      padding: 7px 10px;
-      background: #1a1a1a;
-      border: 1px solid #333;
-      border-radius: 6px;
-      color: #f0f0f0;
-      font-size: 12px;
+    .btn:last-child { margin-bottom: 0; }
+    .btn-open   { background: #7c3aed; color: #fff; }
+    .btn-start  { background: #166534; color: #fff; }
+    .btn-stop   { background: #7f1d1d; color: #fff; display: none; }
+    .key-toggle {
+      width: 100%; text-align: left;
+      background: none; border: none;
+      color: #888; font-size: 10px; cursor: pointer; padding: 0;
+      display: flex; align-items: center; gap: 4px;
     }
-    .input-row input::placeholder { color: #555; }
-    .input-row button {
-      padding: 7px 12px;
-      background: #4c1d95;
-      border: none;
-      border-radius: 6px;
-      color: #fff;
-      cursor: pointer;
-      font-size: 12px;
-      font-weight: 600;
-    }
-    .status-dot {
-      display: inline-block;
-      width: 7px; height: 7px;
-      border-radius: 50%;
-      margin-right: 6px;
-    }
-    .dot-running { background: #22c55e; box-shadow: 0 0 6px #22c55e; }
-    .dot-stopped { background: #6b7280; }
-    .status-row { display: flex; align-items: center; font-size: 12px; margin-bottom: 10px; }
-    .sheets-status { font-size: 11px; color: #888; margin-top: 4px; }
-    .sheets-ok { color: #22c55e; }
+    .key-toggle:hover { color: #c084fc; }
+    .key-body { margin-top: 8px; display: none; }
+    .key-body.open { display: block; }
     textarea.key-input {
-      width: 100%;
-      height: 64px;
-      padding: 6px 8px;
-      background: #1a1a1a;
-      border: 1px solid #333;
-      border-radius: 6px;
-      color: #f0f0f0;
-      font-size: 10px;
-      font-family: monospace;
-      resize: vertical;
-      margin-bottom: 6px;
+      width: 100%; height: 56px;
+      padding: 5px 7px; background: #1a1a1a;
+      border: 1px solid #333; border-radius: 5px;
+      color: #f0f0f0; font-size: 9px; font-family: monospace; resize: vertical;
+      margin-bottom: 5px;
     }
-    textarea.key-input::placeholder { color: #555; }
-    .side-link { font-size: 11px; color: #7c3aed; cursor: pointer; text-decoration: underline; margin-top: 6px; display: block; text-align: center; }
+    textarea.key-input::placeholder { color: #444; }
+    .btn-save-key {
+      width: 100%; padding: 6px;
+      background: #1a3020; border: 1px solid #166534;
+      border-radius: 4px; color: #4ade80;
+      cursor: pointer; font-size: 10px; font-weight: 600;
+    }
+    .key-status { font-size: 10px; color: #888; margin-top: 4px; }
+    .key-ok { color: #22c55e; }
   </style>
 </head>
 <body>
   <div class="header">
-    <h1>🌿 Wisteria Cannabis Scraper</h1>
-    <p>Instagram account discovery &amp; metrics</p>
+    <div class="status-dot" id="statusDot"></div>
+    <h1>Wisteria Scraper</h1>
+    <span class="status-text" id="statusText">—</span>
   </div>
 
   <div class="section">
-    <div class="status-row">
-      <span class="status-dot" id="statusDot"></span>
-      <span id="statusText">Stopped</span>
-    </div>
-    <div class="stat-row"><span class="stat-label">Evaluated</span><span class="stat-value" id="evalCount">—</span></div>
-    <div class="stat-row"><span class="stat-label">Queue remaining</span><span class="stat-value" id="queueCount">—</span></div>
-    <div class="stat-row"><span class="stat-label">Session / Daily</span><span class="stat-value" id="rateCount">—</span></div>
-    <div class="progress-bar-outer">
-      <div class="progress-bar-inner" id="progressBar" style="width:0%"></div>
-    </div>
-    <div class="progress-label" id="progressLabel">Load state to see progress</div>
-  </div>
-
-  <div class="section">
-    <div class="section-title">Service Account Key</div>
-    <textarea class="key-input" id="keyInput" placeholder="Paste your service account JSON key here…"></textarea>
-    <button class="btn btn-secondary" id="btnSaveKey">Save Key</button>
-    <div class="sheets-status" id="keyStatus">No key saved</div>
-  </div>
-
-  <div class="section">
-    <div class="section-title">Controls</div>
-    <button class="btn btn-primary" id="btnStart">▶ Start Evaluation</button>
-    <button class="btn btn-danger" id="btnStop" style="display:none">⏹ Stop</button>
-    <button class="btn btn-sheets" id="btnSheets">☁ Connect Google Sheets</button>
-    <div class="sheets-status" id="sheetsStatus">Not connected</div>
-    <a class="side-link" id="openSidePanel">Open full data view →</a>
-  </div>
-
-  <div class="section">
-    <div class="section-title">Add accounts manually</div>
-    <div class="input-row">
-      <input type="text" id="addInput" placeholder="username1, username2, ...">
-      <button id="btnAdd">Add</button>
-    </div>
+    <button class="btn btn-open" id="btnOpen">Open Dashboard →</button>
+    <button class="btn btn-start" id="btnStart">▶ Start Evaluation</button>
+    <button class="btn btn-stop"  id="btnStop">⏹ Stop</button>
   </div>
 
   <div class="section" style="border:none">
-    <div class="section-title">Settings</div>
-    <div class="stat-row">
-      <span class="stat-label">Min delay (sec)</span>
-      <input type="number" id="minDelay" value="10" style="width:60px;padding:3px 6px;background:#1a1a1a;border:1px solid #333;border-radius:4px;color:#f0f0f0;font-size:12px">
+    <button class="key-toggle" id="keyToggle">⚙ Service account key <span id="keyChevron">▾</span></button>
+    <div class="key-body" id="keyBody">
+      <div class="key-status" id="keyStatus">No key saved</div>
+      <textarea class="key-input" id="keyInput" placeholder="Paste JSON key here…"></textarea>
+      <button class="btn-save-key" id="btnSaveKey">Save key</button>
     </div>
-    <div class="stat-row" style="margin-top:6px">
-      <span class="stat-label">Max delay (sec)</span>
-      <input type="number" id="maxDelay" value="20" style="width:60px;padding:3px 6px;background:#1a1a1a;border:1px solid #333;border-radius:4px;color:#f0f0f0;font-size:12px">
-    </div>
-    <div class="stat-row" style="margin-top:6px">
-      <span class="stat-label">Session cap</span>
-      <input type="number" id="sessionCap" value="200" style="width:60px;padding:3px 6px;background:#1a1a1a;border:1px solid #333;border-radius:4px;color:#f0f0f0;font-size:12px">
-    </div>
-    <button class="btn btn-secondary" id="btnSaveSettings" style="margin-top:8px">Save settings</button>
   </div>
 
   <script src="popup.js"></script>
