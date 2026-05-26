@@ -296,19 +296,68 @@ async function saveAccount(profile) {
   await setState({ evaluated });
 }
 
-// --- Google Sheets integration ---
+// --- Google Sheets integration (service account JWT auth) ---
 
-async function getAuthToken() {
-  return new Promise((resolve, reject) => {
-    chrome.identity.getAuthToken({ interactive: true }, (token) => {
-      if (chrome.runtime.lastError) reject(new Error(chrome.runtime.lastError.message));
-      else resolve(token);
-    });
+let _cachedToken = null;
+let _cachedTokenExpiry = 0;
+
+function b64url(str) {
+  return btoa(str).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+}
+
+function b64urlFromBuffer(buf) {
+  return btoa(String.fromCharCode(...new Uint8Array(buf)))
+    .replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+}
+
+async function getServiceAccountToken() {
+  const now = Math.floor(Date.now() / 1000);
+  if (_cachedToken && _cachedTokenExpiry > now + 60) return _cachedToken;
+
+  const { serviceAccountKey } = await getState();
+  if (!serviceAccountKey) throw new Error('No service account key saved. Paste it in the extension popup first.');
+
+  const key = typeof serviceAccountKey === 'string' ? JSON.parse(serviceAccountKey) : serviceAccountKey;
+
+  const header = b64url(JSON.stringify({ alg: 'RS256', typ: 'JWT' }));
+  const claims = b64url(JSON.stringify({
+    iss: key.client_email,
+    scope: 'https://www.googleapis.com/auth/spreadsheets',
+    aud: 'https://oauth2.googleapis.com/token',
+    iat: now,
+    exp: now + 3600
+  }));
+  const signingInput = `${header}.${claims}`;
+
+  const pemBody = key.private_key.replace(/-----[^-]+-----/g, '').replace(/\s/g, '');
+  const keyDer = Uint8Array.from(atob(pemBody), c => c.charCodeAt(0));
+  const cryptoKey = await crypto.subtle.importKey(
+    'pkcs8', keyDer.buffer,
+    { name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-256' },
+    false, ['sign']
+  );
+
+  const sig = await crypto.subtle.sign(
+    'RSASSA-PKCS1-v1_5', cryptoKey,
+    new TextEncoder().encode(signingInput)
+  );
+  const jwt = `${signingInput}.${b64urlFromBuffer(sig)}`;
+
+  const res = await fetch('https://oauth2.googleapis.com/token', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: `grant_type=urn%3Aietf%3Aparams%3Aoauth%3Agrant-type%3Ajwt-bearer&assertion=${jwt}`
   });
+  if (!res.ok) throw new Error(`Token exchange failed: ${await res.text()}`);
+
+  const { access_token, expires_in } = await res.json();
+  _cachedToken = access_token;
+  _cachedTokenExpiry = now + expires_in;
+  return access_token;
 }
 
 async function sheetsRequest(method, path, body) {
-  const token = await getAuthToken();
+  const token = await getServiceAccountToken();
   const res = await fetch(`${SHEETS_API}/${SPREADSHEET_ID}${path}`, {
     method,
     headers: {
@@ -592,9 +641,21 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
         sendResponse({ ok: true });
         break;
 
+      case 'SAVE_SERVICE_ACCOUNT_KEY': {
+        try {
+          const parsed = typeof msg.key === 'string' ? JSON.parse(msg.key) : msg.key;
+          if (!parsed.client_email || !parsed.private_key) throw new Error('Invalid key JSON — missing client_email or private_key');
+          await setState({ serviceAccountKey: parsed });
+          _cachedToken = null; // invalidate any cached token
+          sendResponse({ ok: true });
+        } catch (e) {
+          sendResponse({ ok: false, error: e.message });
+        }
+        break;
+      }
+
       case 'CONNECT_SHEETS': {
         try {
-          const token = await getAuthToken();
           await ensureSheet('Accounts', ACCOUNT_HEADERS);
           await ensureSheet('Discovery Queue', ['username','source','status','added_date']);
           await ensureSheet('Edges', ['from_account','to_account','relationship_type','added_date']);

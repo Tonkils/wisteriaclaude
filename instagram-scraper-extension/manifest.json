@@ -6,7 +6,6 @@
 
   "permissions": [
     "storage",
-    "identity",
     "sidePanel",
     "tabs",
     "scripting"
@@ -15,7 +14,7 @@
   "host_permissions": [
     "*://*.instagram.com/*",
     "https://sheets.googleapis.com/*",
-    "https://accounts.google.com/*"
+    "https://oauth2.googleapis.com/*"
   ],
 
   "web_accessible_resources": [
@@ -48,10 +47,4 @@
     }
   },
 
-  "oauth2": {
-    "client_id": "25055724785-t170nrbtj12i9u5nou81v2kfil6o2jjp.apps.googleusercontent.com",
-    "scopes": [
-      "https://www.googleapis.com/auth/spreadsheets"
-    ]
-  }
 }

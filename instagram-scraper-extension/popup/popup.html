@@ -75,6 +75,20 @@
     .status-row { display: flex; align-items: center; font-size: 12px; margin-bottom: 10px; }
     .sheets-status { font-size: 11px; color: #888; margin-top: 4px; }
     .sheets-ok { color: #22c55e; }
+    textarea.key-input {
+      width: 100%;
+      height: 64px;
+      padding: 6px 8px;
+      background: #1a1a1a;
+      border: 1px solid #333;
+      border-radius: 6px;
+      color: #f0f0f0;
+      font-size: 10px;
+      font-family: monospace;
+      resize: vertical;
+      margin-bottom: 6px;
+    }
+    textarea.key-input::placeholder { color: #555; }
     .side-link { font-size: 11px; color: #7c3aed; cursor: pointer; text-decoration: underline; margin-top: 6px; display: block; text-align: center; }
   </style>
 </head>
@@ -96,6 +110,13 @@
       <div class="progress-bar-inner" id="progressBar" style="width:0%"></div>
     </div>
     <div class="progress-label" id="progressLabel">Load state to see progress</div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Service Account Key</div>
+    <textarea class="key-input" id="keyInput" placeholder="Paste your service account JSON key here…"></textarea>
+    <button class="btn btn-secondary" id="btnSaveKey">Save Key</button>
+    <div class="sheets-status" id="keyStatus">No key saved</div>
   </div>
 
   <div class="section">
