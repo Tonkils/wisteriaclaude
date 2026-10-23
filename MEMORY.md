@@ -11,6 +11,8 @@ Shared memory store for Jaret and Hiya's Claude Code sessions. This index grows 
 - [Video Editing Knowledge Base](memory/projects/video-editing-knowledge.md) — Shared reference library for expert editing guidance across podcast, short-form, and YouTube
 - [Video Editing Orchestrator](memory/projects/video-editing-orchestrator.md) — Agent system with slash commands, dual-path routing, editorial heuristics, feedback loop
 
+- [Influencer Performance Infographics](memory/projects/influencer_infographics.md) — Format, metric formulas, and decisions for creator infographics (glitzndabz, thematchadragon)
+
 ## Feedback — Jaret
 <!-- Jaret-specific interaction preferences go here -->
 
