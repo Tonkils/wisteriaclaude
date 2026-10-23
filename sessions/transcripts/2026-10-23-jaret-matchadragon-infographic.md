@@ -25,3 +25,5 @@ topic: @thematchadragon performance infographic (Jul 24 – Oct 21, 2026)
 **Build:** HTML rendered to PNG with headless Chromium (infographics/thematchadragon-2026-07-24_to_10-21.png/.html). Fixed label overflow, badge overlap, hidden pillars, clipped footer on render checks. Placeholders: subtitle "Anime Nostalgia Creator & Lifestyle Influencer", tagline "Where Anime Meets Green", pillars (Anime Nostalgia, Lifestyle/GRWM, Humor/Relatable, Art/Drawing, Dabs/Cannabis), header cloud icon copied from glitz.
 
 No corrections to Claude's behavior this session (the plan rejection only supplied the missing follower count).
+
+**Follow-up edit (Jaret):** Put Cannabis first and drop "Dabs"; use a cannabis leaf icon; rename "Anime Nostalgia" to "Anime"; pick better icons for the others. Claude changed the pillars to Cannabis (leaf), Anime (sparkle eye), Lifestyle/GRWM (lipstick), Humor/Relatable (laughing face), Art/Drawing (palette) and re-rendered.
